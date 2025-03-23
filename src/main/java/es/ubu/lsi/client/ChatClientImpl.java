@@ -1,11 +1,11 @@
 package es.ubu.lsi.client;
 
 import es.ubu.lsi.common.ChatMessage;
+import es.ubu.lsi.common.MessageType;
 
 import java.io.*;
 import java.net.Socket;
-import es.ubu.lsi.common.MessageType;
-
+import java.util.Scanner;
 
 public class ChatClientImpl implements ChatClient {
 
@@ -95,11 +95,37 @@ public class ChatClientImpl implements ChatClient {
         // me conecto al servidor
         cliente.conectar();
 
-        // creo un mensaje de tipo MENSAJE con remitente "mario" y texto "hola servidor!"
-        ChatMessage mensaje = new ChatMessage("mario", "hola servidor!", MessageType.MENSAJE);
+        // creo un scanner para leer desde teclado
+        Scanner scanner = new Scanner(System.in);
 
-        // envio el mensaje al servidor
-        cliente.enviarMensaje(mensaje);
+        // guardo el nombre del remitente (puedes cambiar esto si haces login)
+        String remitente = "mario";
+
+        // muestro instrucciones
+        System.out.println("escribe mensajes (escribe 'logout' para salir del chat):");
+
+        // leo el texto del usuario en bucle
+        while (true) {
+            // leo una linea del usuario
+            String texto = scanner.nextLine();
+
+            // si escribe logout, salgo del bucle
+            if (texto.equalsIgnoreCase("logout")) {
+                // creo un mensaje de tipo LOGOUT
+                ChatMessage mensajeLogout = new ChatMessage(remitente, "cerrando sesion", MessageType.LOGOUT);
+                cliente.enviarMensaje(mensajeLogout);
+                break;
+            }
+
+            // creo un mensaje normal de tipo MENSAJE con el texto escrito
+            ChatMessage mensaje = new ChatMessage(remitente, texto, MessageType.MENSAJE);
+
+            // envio el mensaje al servidor
+            cliente.enviarMensaje(mensaje);
+        }
+
+        // cierro el scanner y desconecto
+        scanner.close();
+        cliente.desconectar();
     }
-
 }

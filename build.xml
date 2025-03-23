@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Practica1Chat" default="javadoc" basedir=".">
+
+    <!-- donde se generara la documentacion -->
+    <property name="doc.dir" value="doc" />
+
+    <!-- donde estÁ el codigo fuente -->
+    <property name="src.dir" value="src/main/java" />
+
+    <!-- donde se guardan las clases compiladas (por si lo necesitas en el futuro) -->
+    <property name="build.dir" value="target" />
+
+    <!-- target para generar la javadoc -->
+    <target name="javadoc">
+        <javadoc sourcepath="${src.dir}" destdir="${doc.dir}" author="true" version="true" use="true" windowtitle="Practica 1 - Chat Distribuido">
+            <classpath>
+                <pathelement path="${build.dir}" />
+            </classpath>
+        </javadoc>
+    </target>
+
+</project>
