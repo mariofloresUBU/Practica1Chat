@@ -10,25 +10,47 @@ import java.util.Scanner;
 import java.util.Set;
 
 /**
- * implementacion del cliente de chat
+ * IMPLEMENTACION DEL CLIENTE DE CHAT.
+ * PROPORCIONA LA FUNCIONALIDAD COMPLETA PARA CONECTARSE
+ * AL SERVIDOR, ENVIAR Y RECIBIR MENSAJES, Y GESTIONAR
+ * EL BLOQUEO DE USUARIOS.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public class ChatClientImpl implements ChatClient {
 
+    /** DIRECCION POR DEFECTO DEL SERVIDOR */
     private static final String HOST = "localhost";
+
+    /** PUERTO POR DEFECTO DEL SERVIDOR */
     private static final int PUERTO = 1500;
 
+    /** SOCKET DE CONEXION CON EL SERVIDOR */
     private Socket socket;
+
+    /** FLUJO DE ENTRADA PARA RECIBIR MENSAJES */
     private ObjectInputStream entrada;
+
+    /** FLUJO DE SALIDA PARA ENVIAR MENSAJES */
     private ObjectOutputStream salida;
+
+    /** LISTENER PARA NOTIFICAR MENSAJES RECIBIDOS */
     private ChatClientListener listener;
+
+    /** NOMBRE DE USUARIO EN EL CHAT */
     private String nickname;
+
+    /** CONJUNTO DE USUARIOS BLOQUEADOS */
     private Set<String> usuariosBloqueados;
+
+    /** INDICA SI EL CLIENTE ESTA CONECTADO AL SERVIDOR */
     private boolean conectado;
 
     /**
-     * constructor por defecto
+     * CONSTRUCTOR POR DEFECTO.
+     * INICIALIZA LAS ESTRUCTURAS DE DATOS NECESARIAS.
      */
     public ChatClientImpl() {
         this.usuariosBloqueados = new HashSet<>();
@@ -36,9 +58,10 @@ public class ChatClientImpl implements ChatClient {
     }
 
     /**
-     * constructor con nickname
+     * CONSTRUCTOR CON NICKNAME.
+     * INICIALIZA LAS ESTRUCTURAS Y ESTABLECE EL NICKNAME.
      *
-     * @param nickname nombre de usuario para el chat
+     * @param nickname NOMBRE DE USUARIO PARA EL CHAT
      */
     public ChatClientImpl(String nickname) {
         this();
@@ -46,90 +69,94 @@ public class ChatClientImpl implements ChatClient {
     }
 
     /**
-     * establezco una conexion con el servidor
+     * ESTABLECE UNA CONEXION CON EL SERVIDOR.
+     * CREA LOS FLUJOS DE ENTRADA/SALIDA Y UN HILO PARA
+     * ESCUCHAR MENSAJES ENTRANTES.
      */
     @Override
     public void conectar() {
         try {
-            // me conecto al servidor por socket
+            // ME CONECTO AL SERVIDOR POR SOCKET
             socket = new Socket(HOST, PUERTO);
             conectado = true;
 
-            // inicializo los flujos de entrada y salida
+            // INICIALIZO LOS FLUJOS DE ENTRADA Y SALIDA
             salida = new ObjectOutputStream(socket.getOutputStream());
             entrada = new ObjectInputStream(socket.getInputStream());
 
-            // creo un hilo para escuchar mensajes del servidor
+            // CREO UN HILO PARA ESCUCHAR MENSAJES DEL SERVIDOR
             Thread receptor = new Thread(() -> {
                 try {
                     ChatMessage mensaje;
                     while (conectado && (mensaje = (ChatMessage) entrada.readObject()) != null) {
-                        // verifico si el mensaje es de un usuario bloqueado
+                        // VERIFICO SI EL MENSAJE ES DE UN USUARIO BLOQUEADO
                         if (mensaje.getTipo() == MessageType.MENSAJE &&
                                 usuariosBloqueados.contains(mensaje.getRemitente())) {
-                            // si lo esta, ignoro el mensaje
+                            // SI LO ESTA, IGNORO EL MENSAJE
                             continue;
                         }
 
-                        // cuando recibo un mensaje, se lo paso al listener
+                        // CUANDO RECIBO UN MENSAJE, SE LO PASO AL LISTENER
                         if (listener != null) {
                             listener.onMensajeRecibido(mensaje);
                         }
                     }
                 } catch (IOException e) {
                     if (conectado) {
-                        System.out.println("conexion cerrada por el servidor");
+                        System.out.println("CONEXION CERRADA POR EL SERVIDOR");
                         desconectar();
                     }
                 } catch (ClassNotFoundException e) {
-                    System.out.println("error al procesar mensaje recibido");
+                    System.out.println("ERROR AL PROCESAR MENSAJE RECIBIDO");
                 }
             });
             receptor.start();
 
-            // envio mensaje de login
+            // ENVIO MENSAJE DE LOGIN
             if (nickname != null) {
                 enviarMensaje(new ChatMessage(nickname, "conectandose", MessageType.LOGIN));
             }
 
-            System.out.println("conectado al servidor");
+            System.out.println("CONECTADO AL SERVIDOR");
         } catch (IOException e) {
-            System.out.println("no pude conectar con el servidor");
+            System.out.println("NO PUDE CONECTAR CON EL SERVIDOR");
             conectado = false;
         }
     }
 
     /**
-     * cierro la conexion con el servidor
+     * CIERRA LA CONEXION CON EL SERVIDOR.
+     * ENVIA UN MENSAJE DE LOGOUT Y LIBERA TODOS LOS RECURSOS.
      */
     @Override
     public void desconectar() {
         try {
             conectado = false;
 
-            // envio mensaje de logout si estoy conectado
+            // ENVIO MENSAJE DE LOGOUT SI ESTOY CONECTADO
             if (socket != null && !socket.isClosed() && salida != null) {
                 enviarMensaje(new ChatMessage(nickname, "desconectandose", MessageType.LOGOUT));
             }
 
-            // cierro los recursos
+            // CIERRO LOS RECURSOS
             if (entrada != null) entrada.close();
             if (salida != null) salida.close();
             if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException e) {
-            System.out.println("error al cerrar la conexion");
+            System.out.println("ERROR AL CERRAR LA CONEXION");
         }
     }
 
     /**
-     * envio un mensaje al servidor
+     * ENVIA UN MENSAJE AL SERVIDOR.
+     * EL MENSAJE SE SERIALIZA Y SE ENVIA AL SERVIDOR.
      *
-     * @param mensaje el mensaje a enviar
+     * @param mensaje EL MENSAJE A ENVIAR
      */
     @Override
     public void enviarMensaje(ChatMessage mensaje) {
         if (!conectado) {
-            System.out.println("no estoy conectado al servidor");
+            System.out.println("NO ESTOY CONECTADO AL SERVIDOR");
             return;
         }
 
@@ -137,15 +164,16 @@ public class ChatClientImpl implements ChatClient {
             salida.writeObject(mensaje);
             salida.flush();
         } catch (IOException e) {
-            System.out.println("error al enviar mensaje");
+            System.out.println("ERROR AL ENVIAR MENSAJE");
             desconectar();
         }
     }
 
     /**
-     * configuro un listener para recibir mensajes
+     * CONFIGURA UN LISTENER PARA RECIBIR MENSAJES.
+     * ESTABLECE EL OBJETO QUE SERA NOTIFICADO DE NUEVOS MENSAJES.
      *
-     * @param listener objeto que procesara los mensajes recibidos
+     * @param listener OBJETO QUE PROCESARA LOS MENSAJES RECIBIDOS
      */
     @Override
     public void setListener(ChatClientListener listener) {
@@ -153,9 +181,10 @@ public class ChatClientImpl implements ChatClient {
     }
 
     /**
-     * bloqueo a un usuario para no recibir sus mensajes
+     * BLOQUEA A UN USUARIO PARA NO RECIBIR SUS MENSAJES.
+     * AÑADE AL USUARIO A LA LISTA DE BLOQUEADOS Y NOTIFICA AL SERVIDOR.
      *
-     * @param usuario nombre del usuario a bloquear
+     * @param usuario NOMBRE DEL USUARIO A BLOQUEAR
      */
     @Override
     public void bloquearUsuario(String usuario) {
@@ -163,21 +192,28 @@ public class ChatClientImpl implements ChatClient {
             return;
         }
 
-        // añado al conjunto de bloqueados
+        // AÑADO AL CONJUNTO DE BLOQUEADOS
         usuariosBloqueados.add(usuario);
 
-        // informo al servidor del bloqueo
+        // INFORMO AL SERVIDOR DEL BLOQUEO
         if (conectado) {
-            enviarMensaje(new ChatMessage(nickname, usuario, MessageType.BAN, usuario));
+            ChatMessage mensaje = new ChatMessage(
+                    nickname,
+                    nickname + " ha baneado a " + usuario,
+                    MessageType.BAN,
+                    usuario
+            );
+            enviarMensaje(mensaje);
         }
 
-        System.out.println("usuario " + usuario + " bloqueado");
+        System.out.println("USUARIO " + usuario + " BLOQUEADO");
     }
 
     /**
-     * desbloqueo a un usuario para volver a recibir sus mensajes
+     * DESBLOQUEA A UN USUARIO PARA VOLVER A RECIBIR SUS MENSAJES.
+     * ELIMINA AL USUARIO DE LA LISTA DE BLOQUEADOS Y NOTIFICA AL SERVIDOR.
      *
-     * @param usuario nombre del usuario a desbloquear
+     * @param usuario NOMBRE DEL USUARIO A DESBLOQUEAR
      */
     @Override
     public void desbloquearUsuario(String usuario) {
@@ -185,67 +221,85 @@ public class ChatClientImpl implements ChatClient {
             return;
         }
 
-        // elimino del conjunto de bloqueados
+        // ELIMINO DEL CONJUNTO DE BLOQUEADOS
         usuariosBloqueados.remove(usuario);
 
-        // informo al servidor del desbloqueo
+        // INFORMO AL SERVIDOR DEL DESBLOQUEO
         if (conectado) {
-            enviarMensaje(new ChatMessage(nickname, usuario, MessageType.UNBAN, usuario));
+            ChatMessage mensaje = new ChatMessage(
+                    nickname,
+                    nickname + " ha desbaneado a " + usuario,
+                    MessageType.UNBAN,
+                    usuario
+            );
+            enviarMensaje(mensaje);
         }
 
-        System.out.println("usuario " + usuario + " desbloqueado");
+        System.out.println("USUARIO " + usuario + " DESBLOQUEADO");
     }
 
     /**
-     * verifico si un usuario esta bloqueado
+     * VERIFICA SI UN USUARIO ESTA BLOQUEADO.
      *
-     * @param usuario nombre a verificar
-     * @return true si esta bloqueado, false en caso contrario
+     * @param usuario NOMBRE A VERIFICAR
+     * @return TRUE SI ESTA BLOQUEADO, FALSE EN CASO CONTRARIO
      */
     public boolean estaUsuarioBloqueado(String usuario) {
         return usuariosBloqueados.contains(usuario);
     }
 
     /**
-     * establezco el nickname del cliente
+     * ESTABLECE EL NICKNAME DEL CLIENTE.
      *
-     * @param nickname nuevo nombre para el cliente
+     * @param nickname NUEVO NOMBRE PARA EL CLIENTE
      */
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
 
     /**
-     * obtengo el nickname actual
+     * OBTIENE EL NICKNAME ACTUAL.
      *
-     * @return nombre de usuario
+     * @return NOMBRE DE USUARIO
      */
     public String getNickname() {
         return nickname;
     }
 
     /**
-     * metodo main para probar el cliente en consola
+     * METODO PRINCIPAL PARA EJECUTAR EL CLIENTE EN MODO CONSOLA.
+     * SOLICITA UN NICKNAME, CONFIGURA EL CLIENTE Y PROCESA COMANDOS.
      *
-     * @param args argumentos de linea de comandos
+     * @param args ARGUMENTOS DE LINEA DE COMANDOS (HOST Y NICKNAME)
      */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        String host = HOST;
+        String nickname;
 
-        // solicito el nickname
-        System.out.print("introduce tu nickname: ");
-        String nickname = scanner.nextLine().trim();
+        // PROCESO LOS ARGUMENTOS SI EXISTEN
+        if (args.length >= 2) {
+            host = args[0];
+            nickname = args[1];
+        } else {
+            // SOLICITO EL NICKNAME
+            System.out.print("INTRODUCE TU NICKNAME: ");
+            nickname = scanner.nextLine().trim();
+        }
 
-        // creo e inicio el cliente
+        // CREO E INICIO EL CLIENTE
         ChatClientImpl cliente = new ChatClientImpl(nickname);
 
-        // asigno el listener que imprime los mensajes recibidos
+        // ASIGNO EL LISTENER QUE IMPRIME LOS MENSAJES RECIBIDOS
         cliente.setListener(mensaje -> {
             String tipo = mensaje.getTipo().toString();
             String remitente = mensaje.getRemitente();
             String contenido = mensaje.getContenido();
 
-            // formato segun el tipo de mensaje
+            // MARIO FLORES PATROCINA EL MENSAJE:
+            System.out.println("MARIO FLORES PATROCINA EL MENSAJE:");
+
+            // FORMATO SEGUN EL TIPO DE MENSAJE
             switch (mensaje.getTipo()) {
                 case MENSAJE:
                     System.out.println("[" + remitente + "]: " + contenido);
@@ -257,37 +311,37 @@ public class ChatClientImpl implements ChatClient {
                     System.out.println("[PRIVADO de " + remitente + "]: " + contenido);
                     break;
                 case LOGIN:
-                    System.out.println("Usuario " + remitente + " se ha conectado");
+                    System.out.println("USUARIO " + remitente + " SE HA CONECTADO");
                     break;
                 case LOGOUT:
-                    System.out.println("Usuario " + remitente + " se ha desconectado");
+                    System.out.println("USUARIO " + remitente + " SE HA DESCONECTADO");
                     break;
                 default:
                     System.out.println("[" + tipo + "] " + remitente + ": " + contenido);
             }
         });
 
-        // me conecto al servidor
+        // ME CONECTO AL SERVIDOR
         cliente.conectar();
 
-        // explico los comandos disponibles
-        System.out.println("\nComandos disponibles:");
-        System.out.println("  /msg <usuario> <mensaje> - Enviar mensaje privado");
-        System.out.println("  /ban <usuario> - Bloquear mensajes de un usuario");
-        System.out.println("  /unban <usuario> - Desbloquear mensajes de un usuario");
-        System.out.println("  /logout - Salir del chat");
-        System.out.println("\nEscribe tus mensajes:");
+        // EXPLICO LOS COMANDOS DISPONIBLES
+        System.out.println("\nCOMANDOS DISPONIBLES:");
+        System.out.println("  /msg <usuario> <mensaje> - ENVIAR MENSAJE PRIVADO");
+        System.out.println("  /ban <usuario> - BLOQUEAR MENSAJES DE UN USUARIO");
+        System.out.println("  /unban <usuario> - DESBLOQUEAR MENSAJES DE UN USUARIO");
+        System.out.println("  /logout - SALIR DEL CHAT");
+        System.out.println("\nESCRIBE TUS MENSAJES:");
 
-        // leo el texto del usuario en bucle
+        // LEO EL TEXTO DEL USUARIO EN BUCLE
         String texto;
         boolean continuar = true;
 
         while (continuar && cliente.conectado) {
             texto = scanner.nextLine();
 
-            // procesamiento de comandos
+            // PROCESAMIENTO DE COMANDOS
             if (texto.startsWith("/")) {
-                String[] partes = texto.split("\\s+", 3); // divido en máximo 3 partes
+                String[] partes = texto.split("\\s+", 3); // DIVIDO EN MÁXIMO 3 PARTES
 
                 switch (partes[0].toLowerCase()) {
                     case "/logout":
@@ -297,16 +351,18 @@ public class ChatClientImpl implements ChatClient {
                     case "/ban":
                         if (partes.length > 1) {
                             cliente.bloquearUsuario(partes[1]);
+                            System.out.println("USUARIO " + partes[1] + " HA SIDO BLOQUEADO");
                         } else {
-                            System.out.println("Uso: /ban <usuario>");
+                            System.out.println("USO: /ban <usuario>");
                         }
                         break;
 
                     case "/unban":
                         if (partes.length > 1) {
                             cliente.desbloquearUsuario(partes[1]);
+                            System.out.println("USUARIO " + partes[1] + " HA SIDO DESBLOQUEADO");
                         } else {
-                            System.out.println("Uso: /unban <usuario>");
+                            System.out.println("USO: /unban <usuario>");
                         }
                         break;
 
@@ -316,23 +372,23 @@ public class ChatClientImpl implements ChatClient {
                                     nickname, partes[2], MessageType.PRIVADO, partes[1]);
                             cliente.enviarMensaje(msgPrivado);
                         } else {
-                            System.out.println("Uso: /msg <usuario> <mensaje>");
+                            System.out.println("USO: /msg <usuario> <mensaje>");
                         }
                         break;
 
                     default:
-                        System.out.println("Comando desconocido: " + partes[0]);
+                        System.out.println("COMANDO DESCONOCIDO: " + partes[0]);
                 }
             } else if (!texto.trim().isEmpty()) {
-                // mensaje normal
+                // MENSAJE NORMAL
                 ChatMessage mensaje = new ChatMessage(nickname, texto, MessageType.MENSAJE);
                 cliente.enviarMensaje(mensaje);
             }
         }
 
-        // cierro el scanner y desconecto
+        // CIERRO EL SCANNER Y DESCONECTO
         scanner.close();
         cliente.desconectar();
-        System.out.println("Sesión finalizada");
+        System.out.println("SESION FINALIZADA");
     }
 }

@@ -1,18 +1,25 @@
 package es.ubu.lsi.server;
 
 /**
- * interfaz para el servidor de chat
+ * INTERFAZ PARA EL SERVIDOR DE CHAT.
+ * DEFINE LAS OPERACIONES BASICAS QUE DEBE IMPLEMENTAR
+ * UN SERVIDOR DE CHAT.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public interface ChatServer {
     /**
-     * arranco el servidor para empezar a recibir conexiones
+     * ARRANCA EL SERVIDOR PARA EMPEZAR A RECIBIR CONEXIONES.
+     * CONFIGURA EL SOCKET DEL SERVIDOR Y ENTRA EN UN BUCLE
+     * PARA ACEPTAR NUEVAS CONEXIONES DE CLIENTES.
      */
     void startup();
 
     /**
-     * detengo el servidor y cierro todas las conexiones
+     * DETIENE EL SERVIDOR Y CIERRA TODAS LAS CONEXIONES.
+     * NOTIFICA A TODOS LOS CLIENTES Y LIBERA LOS RECURSOS.
      */
     void shutdown();
 }

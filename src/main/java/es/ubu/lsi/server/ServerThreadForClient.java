@@ -9,25 +9,43 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * hilo para manejar cada cliente conectado al servidor
+ * HILO PARA MANEJAR CADA CLIENTE CONECTADO AL SERVIDOR.
+ * GESTIONA LA COMUNICACION CON UN CLIENTE ESPECIFICO,
+ * PROCESANDO LOS MENSAJES RECIBIDOS Y ENVIANDO LOS MENSAJES.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public class ServerThreadForClient extends Thread {
 
+    /** SOCKET DE CONEXION CON EL CLIENTE */
     private Socket socket;
+
+    /** REFERENCIA AL SERVIDOR PRINCIPAL */
     private ChatServerImpl servidor;
+
+    /** FLUJO DE ENTRADA PARA RECIBIR MENSAJES */
     private ObjectInputStream entrada;
+
+    /** FLUJO DE SALIDA PARA ENVIAR MENSAJES */
     private ObjectOutputStream salida;
+
+    /** NOMBRE DE USUARIO DEL CLIENTE */
     private String nickname;
+
+    /** CONJUNTO DE USUARIOS BLOQUEADOS POR ESTE CLIENTE */
     private Set<String> usuariosBloqueados;
+
+    /** INDICA SI EL CLIENTE ESTA CONECTADO */
     private boolean conectado;
 
     /**
-     * constructor del hilo para cada cliente
+     * CONSTRUCTOR DEL HILO PARA CADA CLIENTE.
+     * INICIALIZA LOS RECURSOS NECESARIOS PARA LA COMUNICACION.
      *
-     * @param socket socket de conexion con el cliente
-     * @param servidor referencia al servidor principal
+     * @param socket SOCKET DE CONEXION CON EL CLIENTE
+     * @param servidor REFERENCIA AL SERVIDOR PRINCIPAL
      */
     public ServerThreadForClient(Socket socket, ChatServerImpl servidor) {
         this.socket = socket;
@@ -37,24 +55,25 @@ public class ServerThreadForClient extends Thread {
     }
 
     /**
-     * tarea principal del hilo: leer mensajes del cliente
+     * TAREA PRINCIPAL DEL HILO: LEER MENSAJES DEL CLIENTE.
+     * PROCESA LOS MENSAJES RECIBIDOS SEGUN SU TIPO.
      */
     @Override
     public void run() {
         try {
-            // creo los flujos de entrada y salida
+            // CREO LOS FLUJOS DE ENTRADA Y SALIDA
             salida = new ObjectOutputStream(socket.getOutputStream());
             entrada = new ObjectInputStream(socket.getInputStream());
 
-            // leo los mensajes que llegan desde el cliente
+            // LEO LOS MENSAJES QUE LLEGAN DESDE EL CLIENTE
             ChatMessage mensaje;
             while (conectado && (mensaje = (ChatMessage) entrada.readObject()) != null) {
-                // guardo el nickname del cliente si es el primer mensaje
+                // GUARDO EL NICKNAME DEL CLIENTE SI ES EL PRIMER MENSAJE
                 if (nickname == null && mensaje.getRemitente() != null) {
                     nickname = mensaje.getRemitente();
                 }
 
-                // proceso segun el tipo de mensaje
+                // PROCESO SEGUN EL TIPO DE MENSAJE
                 switch (mensaje.getTipo()) {
                     case LOGIN:
                         procesarLogin(mensaje);
@@ -78,16 +97,16 @@ public class ServerThreadForClient extends Thread {
 
                     case MENSAJE:
                     default:
-                        // reenvio el mensaje a todos
+                        // REENVIO EL MENSAJE A TODOS
                         servidor.broadcast(mensaje);
                         break;
                 }
             }
         } catch (IOException e) {
-            // el cliente se desconecto abruptamente o hubo un error
-            System.out.println("cliente " + nickname + " desconectado o error: " + e.getMessage());
+            // EL CLIENTE SE DESCONECTO ABRUPTAMENTE O HUBO UN ERROR
+            System.out.println("CLIENTE " + nickname + " DESCONECTADO O ERROR: " + e.getMessage());
         } catch (ClassNotFoundException e) {
-            System.out.println("error al procesar mensaje: " + e.getMessage());
+            System.out.println("ERROR AL PROCESAR MENSAJE: " + e.getMessage());
         } finally {
             cerrarConexion();
             servidor.eliminarCliente(this);
@@ -95,45 +114,48 @@ public class ServerThreadForClient extends Thread {
     }
 
     /**
-     * proceso un mensaje de login
+     * PROCESO UN MENSAJE DE LOGIN.
+     * NOTIFICA A TODOS LOS USUARIOS DE LA NUEVA CONEXION.
      *
-     * @param mensaje mensaje de login recibido
+     * @param mensaje MENSAJE DE LOGIN RECIBIDO
      */
     private void procesarLogin(ChatMessage mensaje) {
-        // notifico a todos los usuarios de la nueva conexion
+        // NOTIFICO A TODOS LOS USUARIOS DE LA NUEVA CONEXION
         ChatMessage notificacion = new ChatMessage(
                 "Server",
-                "El usuario " + mensaje.getRemitente() + " se ha conectado",
+                "EL USUARIO " + mensaje.getRemitente() + " SE HA CONECTADO",
                 MessageType.SISTEMA
         );
         servidor.broadcast(notificacion);
     }
 
     /**
-     * proceso un mensaje de logout
+     * PROCESO UN MENSAJE DE LOGOUT.
+     * MARCA AL CLIENTE COMO DESCONECTADO.
      *
-     * @param mensaje mensaje de logout recibido
+     * @param mensaje MENSAJE DE LOGOUT RECIBIDO
      */
     private void procesarLogout(ChatMessage mensaje) {
-        // marco como desconectado para salir del bucle de lectura
+        // MARCO COMO DESCONECTADO PARA SALIR DEL BUCLE DE LECTURA
         conectado = false;
     }
 
     /**
-     * proceso un mensaje privado
+     * PROCESO UN MENSAJE PRIVADO.
+     * INTENTA ENTREGAR EL MENSAJE AL DESTINATARIO.
      *
-     * @param mensaje mensaje privado recibido
+     * @param mensaje MENSAJE PRIVADO RECIBIDO
      */
     private void procesarMensajePrivado(ChatMessage mensaje) {
-        // intento entregar el mensaje
+        // INTENTO ENTREGAR EL MENSAJE
         boolean entregado = servidor.enviarMensajePrivado(mensaje);
 
-        // si no se pudo entregar, notifico al remitente
+        // SI NO SE PUDO ENTREGAR, NOTIFICO AL REMITENTE
         if (!entregado) {
             ChatMessage error = new ChatMessage(
                     "Server",
-                    "No se pudo entregar tu mensaje. El usuario " +
-                            mensaje.getDestinatario() + " no existe o te ha bloqueado.",
+                    "NO SE PUDO ENTREGAR TU MENSAJE. EL USUARIO " +
+                            mensaje.getDestinatario() + " NO EXISTE O TE HA BLOQUEADO.",
                     MessageType.SISTEMA,
                     mensaje.getRemitente()
             );
@@ -142,31 +164,50 @@ public class ServerThreadForClient extends Thread {
     }
 
     /**
-     * proceso un mensaje de bloqueo
+     * PROCESO UN MENSAJE DE BLOQUEO.
+     * REGISTRA EL BLOQUEO Y NOTIFICA A TODOS LOS USUARIOS.
      *
-     * @param mensaje mensaje de bloqueo recibido
+     * @param mensaje MENSAJE DE BLOQUEO RECIBIDO
      */
     private void procesarBan(ChatMessage mensaje) {
-        String bloqueado = mensaje.getContenido();
+        String bloqueado = mensaje.getDestinatario();
         bloquearUsuario(bloqueado);
         servidor.bloquearUsuario(nickname, bloqueado);
+
+        // NOTIFICO A TODOS LOS USUARIOS
+        ChatMessage notificacion = new ChatMessage(
+                "Server",
+                mensaje.getContenido(),
+                MessageType.SISTEMA
+        );
+        servidor.broadcast(notificacion);
     }
 
     /**
-     * proceso un mensaje de desbloqueo
+     * PROCESO UN MENSAJE DE DESBLOQUEO.
+     * ELIMINA EL BLOQUEO Y NOTIFICA A TODOS LOS USUARIOS.
      *
-     * @param mensaje mensaje de desbloqueo recibido
+     * @param mensaje MENSAJE DE DESBLOQUEO RECIBIDO
      */
     private void procesarUnban(ChatMessage mensaje) {
-        String desbloqueado = mensaje.getContenido();
+        String desbloqueado = mensaje.getDestinatario();
         desbloquearUsuario(desbloqueado);
         servidor.desbloquearUsuario(nickname, desbloqueado);
+
+        // NOTIFICO A TODOS LOS USUARIOS
+        ChatMessage notificacion = new ChatMessage(
+                "Server",
+                mensaje.getContenido(),
+                MessageType.SISTEMA
+        );
+        servidor.broadcast(notificacion);
     }
 
     /**
-     * envio un mensaje al cliente
+     * ENVIO UN MENSAJE AL CLIENTE.
+     * EL MENSAJE SE SERIALIZA Y SE ENVIA AL CLIENTE.
      *
-     * @param mensaje el mensaje a enviar
+     * @param mensaje EL MENSAJE A ENVIAR
      */
     public void enviarMensaje(ChatMessage mensaje) {
         if (!conectado) {
@@ -177,13 +218,14 @@ public class ServerThreadForClient extends Thread {
             salida.writeObject(mensaje);
             salida.flush();
         } catch (IOException e) {
-            System.out.println("no pude enviar mensaje a " + nickname + ": " + e.getMessage());
+            System.out.println("NO PUDE ENVIAR MENSAJE A " + nickname + ": " + e.getMessage());
             conectado = false;
         }
     }
 
     /**
-     * cierro la conexion con el cliente
+     * CIERRO LA CONEXION CON EL CLIENTE.
+     * LIBERA TODOS LOS RECURSOS ASOCIADOS A LA CONEXION.
      */
     public void cerrarConexion() {
         try {
@@ -193,14 +235,15 @@ public class ServerThreadForClient extends Thread {
             if (salida != null) salida.close();
             if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException e) {
-            System.out.println("error al cerrar la conexion del cliente " + nickname);
+            System.out.println("ERROR AL CERRAR LA CONEXION DEL CLIENTE " + nickname);
         }
     }
 
     /**
-     * bloqueo a un usuario para este cliente
+     * BLOQUEO A UN USUARIO PARA ESTE CLIENTE.
+     * AÑADE AL USUARIO A LA LISTA DE BLOQUEADOS.
      *
-     * @param usuario usuario a bloquear
+     * @param usuario USUARIO A BLOQUEAR
      */
     public void bloquearUsuario(String usuario) {
         if (usuario != null && !usuario.trim().isEmpty()) {
@@ -209,9 +252,10 @@ public class ServerThreadForClient extends Thread {
     }
 
     /**
-     * desbloqueo a un usuario para este cliente
+     * DESBLOQUEO A UN USUARIO PARA ESTE CLIENTE.
+     * ELIMINA AL USUARIO DE LA LISTA DE BLOQUEADOS.
      *
-     * @param usuario usuario a desbloquear
+     * @param usuario USUARIO A DESBLOQUEAR
      */
     public void desbloquearUsuario(String usuario) {
         if (usuario != null) {
@@ -220,19 +264,19 @@ public class ServerThreadForClient extends Thread {
     }
 
     /**
-     * verifico si un usuario esta bloqueado por este cliente
+     * VERIFICO SI UN USUARIO ESTA BLOQUEADO POR ESTE CLIENTE.
      *
-     * @param usuario usuario a verificar
-     * @return true si esta bloqueado, false en caso contrario
+     * @param usuario USUARIO A VERIFICAR
+     * @return TRUE SI ESTA BLOQUEADO, FALSE EN CASO CONTRARIO
      */
     public boolean tieneUsuarioBloqueado(String usuario) {
         return usuariosBloqueados.contains(usuario);
     }
 
     /**
-     * obtengo el nickname del cliente
+     * OBTENGO EL NICKNAME DEL CLIENTE.
      *
-     * @return nickname del cliente
+     * @return NICKNAME DEL CLIENTE
      */
     public String getNickname() {
         return nickname;

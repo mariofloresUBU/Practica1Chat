@@ -198,7 +198,7 @@ public class ChatServerImpl implements ChatServer {
      * añado un bloqueo entre usuarios
      *
      * @param bloqueador usuario que bloquea
-     * @param bloqueado usuario que es bloqueado
+     * @param bloqueado  usuario que es bloqueado
      */
     public void bloquearUsuario(String bloqueador, String bloqueado) {
         // busco al cliente que bloquea
@@ -215,7 +215,7 @@ public class ChatServerImpl implements ChatServer {
      * elimino un bloqueo entre usuarios
      *
      * @param desbloqueador usuario que desbloquea
-     * @param desbloqueado usuario que es desbloqueado
+     * @param desbloqueado  usuario que es desbloqueado
      */
     public void desbloquearUsuario(String desbloqueador, String desbloqueado) {
         // busco al cliente que desbloquea
@@ -249,3 +249,4 @@ public class ChatServerImpl implements ChatServer {
         ChatServerImpl servidor = new ChatServerImpl();
         servidor.startup();
     }
+}

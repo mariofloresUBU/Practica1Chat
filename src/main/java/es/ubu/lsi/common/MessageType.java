@@ -3,44 +3,55 @@ package es.ubu.lsi.common;
 import java.io.Serializable;
 
 /**
- * tipos de mensajes que se pueden enviar en el chat
+ * TIPOS DE MENSAJES QUE SE PUEDEN ENVIAR EN EL CHAT.
+ * DEFINE LOS DIFERENTES TIPOS DE MENSAJES SOPORTADOS
+ * POR EL SISTEMA DE CHAT.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public enum MessageType implements Serializable {
 
     /**
-     * cuando un cliente inicia sesion
+     * CUANDO UN CLIENTE INICIA SESION.
+     * ENVIADO POR EL CLIENTE AL CONECTARSE AL SERVIDOR.
      */
     LOGIN,
 
     /**
-     * cuando un cliente cierra sesion
+     * CUANDO UN CLIENTE CIERRA SESION.
+     * ENVIADO POR EL CLIENTE AL DESCONECTARSE.
      */
     LOGOUT,
 
     /**
-     * mensaje de texto normal entre usuarios
+     * MENSAJE DE TEXTO NORMAL ENTRE USUARIOS.
+     * ES EL TIPO MAS COMUN DE MENSAJE EN EL CHAT.
      */
     MENSAJE,
 
     /**
-     * mensaje del sistema
+     * MENSAJE DEL SISTEMA.
+     * GENERADO POR EL SERVIDOR PARA NOTIFICACIONES.
      */
     SISTEMA,
 
     /**
-     * mensaje privado dirigido a un usuario concreto
+     * MENSAJE PRIVADO DIRIGIDO A UN USUARIO CONCRETO.
+     * SOLO LO RECIBE EL DESTINATARIO ESPECIFICADO.
      */
     PRIVADO,
 
     /**
-     * mensaje para bloquear a un usuario
+     * MENSAJE PARA BLOQUEAR A UN USUARIO.
+     * INDICA QUE NO SE DESEAN RECIBIR MENSAJES DE ESE USUARIO.
      */
     BAN,
 
     /**
-     * mensaje para desbloquear a un usuario
+     * MENSAJE PARA DESBLOQUEAR A UN USUARIO.
+     * PERMITE VOLVER A RECIBIR MENSAJES DE UN USUARIO BLOQUEADO.
      */
     UNBAN;
 }

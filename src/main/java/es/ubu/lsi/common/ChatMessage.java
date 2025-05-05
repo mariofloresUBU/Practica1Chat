@@ -3,39 +3,54 @@ package es.ubu.lsi.common;
 import java.io.Serializable;
 
 /**
- * clase que representa un mensaje en el chat
+ * CLASE QUE REPRESENTA UN MENSAJE EN EL CHAT.
+ * ENCAPSULA TODA LA INFORMACION NECESARIA PARA TRANSMITIR
+ * UN MENSAJE ENTRE CLIENTE Y SERVIDOR.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public class ChatMessage implements Serializable {
 
+    /** IDENTIFICADOR DE VERSION PARA SERIALIZACION */
     private static final long serialVersionUID = 1L;
+
+    /** NOMBRE DEL USUARIO QUE ENVIA EL MENSAJE */
     private String remitente;
+
+    /** CONTENIDO DEL MENSAJE */
     private String contenido;
+
+    /** TIPO DE MENSAJE (LOGIN, LOGOUT, MENSAJE, ETC.) */
     private MessageType tipo;
-    private String destinatario; // para mensajes privados
+
+    /** DESTINATARIO DEL MENSAJE (PARA MENSAJES PRIVADOS) */
+    private String destinatario;
 
     /**
-     * constructor para mensajes normales
+     * CONSTRUCTOR PARA MENSAJES NORMALES.
+     * CREA UN MENSAJE SIN DESTINATARIO ESPECIFICO.
      *
-     * @param remitente quien envia el mensaje
-     * @param contenido texto del mensaje
-     * @param tipo tipo del mensaje (ver MessageType)
+     * @param remitente QUIEN ENVIA EL MENSAJE
+     * @param contenido TEXTO DEL MENSAJE
+     * @param tipo TIPO DEL MENSAJE (VER MESSAGETYPE)
      */
     public ChatMessage(String remitente, String contenido, MessageType tipo) {
         this.remitente = remitente;
         this.contenido = contenido;
         this.tipo = tipo;
-        this.destinatario = null; // no hay destinatario específico
+        this.destinatario = null; // NO HAY DESTINATARIO ESPECIFICO
     }
 
     /**
-     * constructor para mensajes privados o comandos especificos
+     * CONSTRUCTOR PARA MENSAJES PRIVADOS O COMANDOS ESPECIFICOS.
+     * CREA UN MENSAJE CON UN DESTINATARIO ESPECIFICO.
      *
-     * @param remitente quien envia el mensaje
-     * @param contenido texto del mensaje
-     * @param tipo tipo del mensaje (ver MessageType)
-     * @param destinatario usuario al que va dirigido el mensaje
+     * @param remitente QUIEN ENVIA EL MENSAJE
+     * @param contenido TEXTO DEL MENSAJE
+     * @param tipo TIPO DEL MENSAJE (VER MESSAGETYPE)
+     * @param destinatario USUARIO AL QUE VA DIRIGIDO EL MENSAJE
      */
     public ChatMessage(String remitente, String contenido, MessageType tipo, String destinatario) {
         this.remitente = remitente;
@@ -45,36 +60,36 @@ public class ChatMessage implements Serializable {
     }
 
     /**
-     * obtengo el remitente del mensaje
+     * OBTIENE EL REMITENTE DEL MENSAJE.
      *
-     * @return nombre del remitente
+     * @return NOMBRE DEL REMITENTE
      */
     public String getRemitente() {
         return remitente;
     }
 
     /**
-     * obtengo el contenido del mensaje
+     * OBTIENE EL CONTENIDO DEL MENSAJE.
      *
-     * @return texto del mensaje
+     * @return TEXTO DEL MENSAJE
      */
     public String getContenido() {
         return contenido;
     }
 
     /**
-     * obtengo el tipo del mensaje
+     * OBTIENE EL TIPO DEL MENSAJE.
      *
-     * @return tipo de mensaje (LOGIN, LOGOUT, etc)
+     * @return TIPO DE MENSAJE (LOGIN, LOGOUT, ETC.)
      */
     public MessageType getTipo() {
         return tipo;
     }
 
     /**
-     * obtengo el destinatario del mensaje
+     * OBTIENE EL DESTINATARIO DEL MENSAJE.
      *
-     * @return destinatario (null si es mensaje global)
+     * @return DESTINATARIO (NULL SI ES MENSAJE GLOBAL)
      */
     public String getDestinatario() {
         return destinatario;

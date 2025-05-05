@@ -3,15 +3,21 @@ package es.ubu.lsi.client;
 import es.ubu.lsi.common.ChatMessage;
 
 /**
- * interfaz para recibir notificaciones de mensajes del chat
+ * INTERFAZ PARA RECIBIR NOTIFICACIONES DE MENSAJES DEL CHAT.
+ * DEFINE EL MECANISMO DE CALLBACK QUE SE UTILIZARA CUANDO
+ * SE RECIBAN NUEVOS MENSAJES DEL SERVIDOR.
  *
- * @author mario flores
+ * @author MARIO FLORES
+ * @version 1.0
+ * @since MARZO 2025
  */
 public interface ChatClientListener {
     /**
-     * metodo que se llama cuando se recibe un mensaje del servidor
+     * METODO QUE SE LLAMA CUANDO SE RECIBE UN MENSAJE DEL SERVIDOR.
+     * ESTE METODO ES INVOCADO POR EL CLIENTE CADA VEZ QUE
+     * RECIBE UN NUEVO MENSAJE DEL SERVIDOR.
      *
-     * @param mensaje el mensaje recibido
+     * @param mensaje EL MENSAJE RECIBIDO DEL SERVIDOR
      */
     void onMensajeRecibido(ChatMessage mensaje);
 }
